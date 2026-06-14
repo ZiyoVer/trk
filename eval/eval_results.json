@@ -1,0 +1,10 @@
+{
+  "sana": "2026-06-14 15:30",
+  "natijalar": {
+    "Oddiy (accuracy)": "9/10",
+    "Tashqari (rejection)": "8/8",
+    "Injection (security)": "5/5",
+    "Kontekst (memory)": "1/3"
+  },
+  "umumiy_accuracy": "88%"
+}
