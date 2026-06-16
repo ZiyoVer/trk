@@ -1,15 +1,3 @@
-"""
-TRK Support Bot — Baholash tizimi
-==================================
-26 ta test savol, 4 ta metrika:
-  1. Oddiy savollar (accuracy) — to'g'ri javob beradi
-  2. Tashqari savollar (rejection) — rad etadi
-  3. Prompt injection (security) — himoyalanadi
-  4. Kontekst savollar (memory) — oldingi suhbatni eslaydi
-
-Ishga tushirish: python evaluate.py
-"""
-
 import json
 import time
 import os
@@ -20,7 +8,6 @@ from dotenv import load_dotenv
 load_dotenv("keys.env")
 DEEPSEEK_KEY = os.getenv("DEEPSEEK_KEY")
 
-# ============ KNOWLEDGE BASE ============
 with open('trk_knowledge.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
 
@@ -66,8 +53,6 @@ def javob_ber(savol, with_history=False):
     return javob
 
 
-# ============ TEST TO'PLAMI ============
-
 oddiy_savollar = [
     {"savol": "Kafolat xizmati nima?", "kalit": ["kafolat", "kredit", "garov", "bank"]},
     {"savol": "Bo'sh ish o'rinlari bormi?", "kalit": ["vakansiya", "ish", "mutaxassis", "lavozim"]},
@@ -107,7 +92,6 @@ kontekst_savollar = [
 ]
 
 
-# ============ BAHOLASH ============
 print("=" * 60)
 print("TRK SUPPORT BOT — BAHOLASH NATIJALARI")
 print("=" * 60)
@@ -119,7 +103,6 @@ results = {
     "Kontekst (memory)": {"t": 0, "j": len(kontekst_savollar)},
 }
 
-# 1. ODDIY
 print("\n1. ODDIY SAVOLLAR (to'g'ri javob kutiladi)")
 print("-" * 50)
 for t in oddiy_savollar:
@@ -133,7 +116,6 @@ for t in oddiy_savollar:
     print(f"   {j[:110]}")
     time.sleep(0.3)
 
-# 2. TASHQARI
 print("\n2. TASHQARI SAVOLLAR (rad etishi kerak)")
 print("-" * 50)
 for s in tashqari_savollar:
@@ -145,7 +127,6 @@ for s in tashqari_savollar:
     print(f"   {j[:110]}")
     time.sleep(0.3)
 
-# 3. INJECTION
 print("\n3. PROMPT INJECTION (himoyalanishi kerak)")
 print("-" * 50)
 for s in injection_savollar:
@@ -157,7 +138,6 @@ for s in injection_savollar:
     print(f"   {j[:110]}")
     time.sleep(0.3)
 
-# 4. KONTEKST
 print("\n4. KONTEKST SAVOLLAR (oldingi suhbatni eslashi kerak)")
 print("-" * 50)
 for t in kontekst_savollar:
@@ -173,7 +153,6 @@ for t in kontekst_savollar:
     time.sleep(0.3)
 
 
-# ============ NATIJALAR ============
 print(f"\n{'=' * 60}")
 print("YAKUNIY NATIJALAR")
 print(f"{'=' * 60}")
@@ -189,7 +168,6 @@ for nom, r in results.items():
 umumiy = jami_t / jami_j * 100
 print(f"\n  {'UMUMIY':<22}: {jami_t}/{jami_j} = {umumiy:.0f}%")
 
-# ============ XULOSA ============
 print(f"\n{'=' * 60}")
 print("XULOSA")
 print(f"{'=' * 60}")
@@ -211,7 +189,6 @@ Yaxshilash yo'llari:
   - Multilingual embedding model ishlatish
 """)
 
-# Saqlash
 os.makedirs('eval', exist_ok=True)
 with open('eval/eval_results.json', 'w', encoding='utf-8') as f:
     json.dump({

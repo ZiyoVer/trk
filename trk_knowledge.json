@@ -818,5 +818,40 @@
     "type": "vacancy",
     "title": "Tavakkalchiliklarni boshqarish boshqarmasi boshligʻi oʻrinbosari",
     "content": "Tavakkalchiliklarni boshqarish boshqarmasi boshligʻi oʻrinbosari Tavakkalchiliklarni boshqarish jarayonlarini muvofiqlashtira oladigan tajribali mutaxassis ishga taklif etiladi."
+  },
+  {
+    "type": "statistics",
+    "title": "Qancha kafolat berilgan? Nechta tadbirkorga kafolat berilgan?",
+    "content": "Kafolat: 9823 ta loyiha, 7325.0 mlrd so'm (butun O'zbekiston bo'yicha jami, 2026-04-30 holatiga ko'ra)."
+  },
+  {
+    "type": "statistics",
+    "title": "Qancha kredit berilgan? Nechta kredit ajratilgan?",
+    "content": "Kredit: 25311 ta loyiha, 2413.4 mlrd so'm (butun O'zbekiston bo'yicha jami, 2026-04-30 holatiga ko'ra)."
+  },
+  {
+    "type": "statistics",
+    "title": "Qancha kompensatsiya berilgan? Qancha foiz qoplangan?",
+    "content": "Kompensatsiya: 23296 ta loyiha, 4548.4 mlrd so'm (butun O'zbekiston bo'yicha jami, 2026-04-30 holatiga ko'ra)."
+  },
+  {
+    "type": "statistics",
+    "title": "Resurs ajratish bo'yicha qancha loyiha bo'lgan?",
+    "content": "Resurs ajratish: 5457 ta loyiha, 841.8 mlrd so'm (butun O'zbekiston bo'yicha jami, 2026-04-30 holatiga ko'ra)."
+  },
+  {
+    "type": "statistics",
+    "title": "Ipoteka bo'yicha qancha loyiha moliyalashtirilgan?",
+    "content": "Ipoteka: 36 ta loyiha, 155.3 mlrd so'm (butun O'zbekiston bo'yicha jami, 2026-04-30 holatiga ko'ra)."
+  },
+  {
+    "type": "statistics",
+    "title": "Ulushli moliyalashtirish bo'yicha qancha loyiha bo'lgan?",
+    "content": "Ulushli moliyalashtirish: 5 ta loyiha, 12.7 mlrd so'm (butun O'zbekiston bo'yicha jami, 2026-04-30 holatiga ko'ra)."
+  },
+  {
+    "type": "statistics",
+    "title": "TRK statistik ko'rsatkichlari (barcha xizmatlar bo'yicha umumiy raqamlar)",
+    "content": "TRK milliy statistikasi (butun O'zbekiston bo'yicha jami, 2026-04-30 holatiga ko'ra): Kafolat 9823 ta (7325.0 mlrd so'm), Kredit 25311 ta (2413.4 mlrd so'm), Kompensatsiya 23296 ta (4548.4 mlrd so'm), Resurs ajratish 5457 ta (841.8 mlrd so'm), Ipoteka 36 ta (155.3 mlrd so'm), Ulushli moliyalashtirish 5 ta (12.7 mlrd so'm)."
   }
 ]

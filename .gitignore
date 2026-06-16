@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# ChromaDB persist (agar ishlatilsa)
+.chroma/
+chroma/
+chroma.sqlite3
+
+# Loglar / vaqtinchalik
+*.log
+.DS_Store

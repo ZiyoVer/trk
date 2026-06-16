@@ -1,19 +1,10 @@
-"""
-TRK Support Bot — Telegram bot + RAG agent
-==========================================
-ChromaDB (semantic search) + DeepSeek LLM bilan
-trk.uz haqida savollarga javob beradi.
-
-Ishga tushirish: python bot.py
-Kalitlar: keys.env faylida
-"""
-
 import json
 import time
+import asyncio
 import logging
 import os
 import chromadb
-from openai import OpenAI
+from openai import AsyncOpenAI
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import (
@@ -21,7 +12,6 @@ from telegram.ext import (
     filters, ContextTypes
 )
 
-# ============ SOZLAMALAR ============
 load_dotenv("keys.env")
 DEEPSEEK_KEY = os.getenv("DEEPSEEK_KEY")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -32,31 +22,27 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ============ KNOWLEDGE BASE ============
 with open('trk_knowledge.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
 
 client_db = chromadb.Client()
 collection = client_db.create_collection("trk_support")
 
+_docs, _ids, _metas = [], [], []
 for i, item in enumerate(data):
-    text = f"{item['title']}. {item['content']}"
-    collection.add(
-        documents=[text],
-        ids=[f"doc_{i}"],
-        metadatas=[{"type": item['type'], "title": item['title']}]
-    )
+    _docs.append(f"{item['title']}. {item['content']}")
+    _ids.append(f"doc_{i}")
+    _metas.append({"type": item['type'], "title": item['title']})
+collection.add(documents=_docs, ids=_ids, metadatas=_metas)
 
 logger.info(f"✅ {collection.count()} ta dokument yuklandi")
 
-# ============ LLM ============
-llm = OpenAI(
+llm = AsyncOpenAI(
     api_key=DEEPSEEK_KEY,
     base_url="https://api.deepseek.com",
     timeout=30
 )
 
-# Holat
 chat_history = {}
 user_rate = {}
 MAX_MSG_PER_MINUTE = 10
@@ -87,18 +73,14 @@ QILMA:
 
 
 def tekshir_xabar(text):
-    """Xabarni LLM'ga yubormasdan oldin tekshirish (pre-filter)"""
     text_lower = text.lower().strip()
 
-    # Juda qisqa
     if len(text_lower) < 2:
         return "Iltimos, to'liqroq savol yozing. 📝"
 
-    # Juda uzun
     if len(text) > 1000:
         return "Savolingiz juda uzun. Iltimos, qisqaroq yozing (1000 belgigacha)."
 
-    # Kod yozish so'rovlari yoki kod yuborish
     kod_belgilar = [
         "python", "javascript", "java ", "c++", "html", "css",
         "def ", "class ", "import ", "function", "const ", "let ", "var ",
@@ -112,7 +94,6 @@ def tekshir_xabar(text):
             return ("Kechirasiz, men kod bilan ishlamayman. 🏢\n"
                     "Men faqat TRK kompaniyasi xizmatlari haqida ma'lumot beraman.")
 
-    # Prompt injection urinishlari
     injection_belgilar = [
         "ignore all", "ignore previous", "ignore the", "forget your",
         "forget all", "forget the", "disregard", "system prompt",
@@ -124,7 +105,6 @@ def tekshir_xabar(text):
         if belgi in text_lower:
             return ("Men faqat TRK kompaniyasi haqida savollarga javob beraman. 🏢")
 
-    # Shaxsiy/maxfiy ma'lumot so'rash
     shaxsiy_belgilar = [
         "parol", "password", "karta raqam", "plastik raqam",
         "login parol", "pin kod", "cvv", "maxfiy kod"
@@ -134,11 +114,10 @@ def tekshir_xabar(text):
             return ("Kechirasiz, men shaxsiy yoki maxfiy ma'lumotlar bilan ishlamayman. 🔒\n"
                     "Iltimos, rasmiy murojaat uchun trk.uz saytiga tashrif buyuring.")
 
-    return None  # OK - davom etish mumkin
+    return None
 
 
 def rate_limit_tekshir(user_id):
-    """1 daqiqada MAX_MSG_PER_MINUTE dan ko'p bo'lmasin"""
     now = time.time()
     if user_id not in user_rate:
         user_rate[user_id] = []
@@ -149,9 +128,10 @@ def rate_limit_tekshir(user_id):
     return True
 
 
-def javob_ber(user_id, savol):
-    """RAG: ChromaDB qidiruv + DeepSeek javob"""
-    results = collection.query(query_texts=[savol], n_results=5)
+async def javob_ber(user_id, savol):
+    results = await asyncio.to_thread(
+        collection.query, query_texts=[savol], n_results=5
+    )
     context = "\n\n".join(results['documents'][0])
 
     if user_id not in chat_history:
@@ -163,7 +143,7 @@ def javob_ber(user_id, savol):
     messages.extend(chat_history[user_id][-6:])
     messages.append({"role": "user", "content": savol})
 
-    response = llm.chat.completions.create(
+    response = await llm.chat.completions.create(
         model="deepseek-chat",
         messages=messages,
         max_tokens=500,
@@ -171,14 +151,12 @@ def javob_ber(user_id, savol):
     )
 
     full_text = ""
-    for chunk in response:
+    async for chunk in response:
         if chunk.choices[0].delta.content:
             full_text += chunk.choices[0].delta.content
 
-    # Markdown tozalash
     full_text = full_text.replace("###", "").replace("##", "").replace("**", "").replace("```", "")
 
-    # Tarixga saqlash
     chat_history[user_id].append({"role": "user", "content": savol})
     chat_history[user_id].append({"role": "assistant", "content": full_text})
     if len(chat_history[user_id]) > 20:
@@ -187,7 +165,6 @@ def javob_ber(user_id, savol):
     return full_text
 
 
-# ============ HANDLERS ============
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user.first_name or "Hurmatli foydalanuvchi"
     await update.message.reply_text(
@@ -231,16 +208,13 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Matnli xabarlarni qayta ishlash"""
     savol = update.message.text
     user_id = update.effective_user.id
 
-    # Matn bo'sh bo'lsa
     if not savol or not savol.strip():
         await update.message.reply_text("Iltimos, savolingizni yozib yuboring. 📝")
         return
 
-    # Rate limit (matn borligini tekshirgandan keyin)
     if not rate_limit_tekshir(user_id):
         await update.message.reply_text(
             "⏳ Siz juda ko'p xabar yubordingiz.\n"
@@ -248,16 +222,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # Pre-filter tekshiruv
     xato = tekshir_xabar(savol)
     if xato:
         await update.message.reply_text(xato)
         return
 
-    # Javob berish
     try:
         msg = await update.message.reply_text("💬 Javob tayyorlanmoqda...")
-        javob = javob_ber(user_id, savol)
+        javob = await javob_ber(user_id, savol)
         if not javob or not javob.strip():
             javob = ("Kechirasiz, javob topa olmadim. "
                      "Iltimos, savolni boshqacha shaklda bering yoki trk.uz saytiga murojaat qiling.")
@@ -278,7 +250,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def handle_non_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Sticker, rasm, video, audio, fayl va boshqa media xabarlar"""
     await update.message.reply_text(
         "Men faqat matnli savollarga javob bera olaman. 📝\n\n"
         "Iltimos, savolingizni yozib yuboring.\n"
@@ -286,7 +257,6 @@ async def handle_non_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-# ============ ISHGA TUSHIRISH ============
 def main():
     if not DEEPSEEK_KEY or not TELEGRAM_TOKEN:
         print("XATO: keys.env faylida DEEPSEEK_KEY va TELEGRAM_TOKEN bo'lishi kerak!")
@@ -294,15 +264,12 @@ def main():
 
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
-    # Buyruqlar
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(CommandHandler("reset", reset))
 
-    # Matnli xabarlar (buyruq emas)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    # Media xabarlar: sticker, rasm, video, audio, ovoz, fayl, lokatsiya, kontakt
     media_filter = (
         filters.Sticker.ALL | filters.PHOTO | filters.VIDEO |
         filters.AUDIO | filters.VOICE | filters.Document.ALL |

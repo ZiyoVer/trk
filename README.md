@@ -3,17 +3,12 @@
 Tadbirkorlikni Rivojlantirish Kompaniyasi (trk.uz) uchun AI yordamchi Telegram bot.
 RAG (Retrieval-Augmented Generation) arxitekturasi bilan sayt kontentidan javob beradi.
 
-## Eslatma (kalitlar haqida)
+## Kalitlar haqida
 
-Bu loyiha sinov topshirig'i (test task) sifatida ishlab chiqilgan. Qulaylik uchun
-keys.env faylidagi API kalitlar shartli ravishda ochiq qoldirilgan — baholovchilar
-qo'shimcha sozlashsiz darhol ishga tushira olishlari uchun.
-
-Ishlab chiqarish (production) muhitida kalitlar HECH QACHON repozitoriyga
-joylashtirilmaydi. Bunda:
-- keys.env .gitignore orqali yashiriladi
-- Kalitlar server muhit o'zgaruvchilari (environment variables) yoki
-  maxfiy boshqaruv tizimi (secrets manager) orqali beriladi
+Sinov topshirig'i qulayligi uchun `keys.env` ishlaydigan API kalitlar bilan loyihada
+joylashtirilgan — baholovchilar hech narsa sozlamasdan darhol ishga tushira oladi.
+Ishlab chiqarish (production) muhitida kalitlar repozitoriyga qo'yilmaydi: `keys.env`
+`.gitignore` ga olinadi va kalitlar muhit o'zgaruvchilari yoki secrets manager orqali beriladi.
 
 ## Tezkor ishga tushirish
 
@@ -28,7 +23,8 @@ joylashtirilmaydi. Bunda:
 
 ### 3. API kalitlar
 
-keys.env fayli loyihada mavjud (test uchun). Agar o'zingiznikini ishlatmoqchi bo'lsangiz:
+keys.env fayli ishlaydigan kalitlar bilan loyihada mavjud — hech narsa qilish shart emas.
+O'zingiznikini ishlatmoqchi bo'lsangiz, keys.env ni tahrirlang:
 
     DEEPSEEK_KEY=sizning_deepseek_kalitingiz
     TELEGRAM_TOKEN=sizning_telegram_tokeningiz
@@ -41,7 +37,7 @@ Telegram token: Telegramda @BotFather ni oching, /newbot buyrug'ini yuboring
 
     python scrapper.py
 
-Natija: trk_knowledge.json (164 ta yozuv)
+Natija: trk_knowledge.json (165 ta yozuv)
 
 ### 5. Botni ishga tushirish
 
@@ -55,16 +51,17 @@ Natija: trk_knowledge.json (164 ta yozuv)
 
     trk/
     |-- scrapper.py           # trk.uz API'dan ma'lumot yig'ish
-    |-- bot.py                # Telegram bot + RAG agent
+    |-- bot.py                # Telegram bot + RAG agent (async)
     |-- evaluate.py           # Baholash tizimi (26 ta test savol)
-    |-- trk_knowledge.json    # Bilim bazasi
+    |-- trk_knowledge.json    # Bilim bazasi (165 ta yozuv)
     |-- eval/
     |   |-- eval_results.json # Baholash natijalari
     |-- requirements.txt
-    |-- keys.env              # API kalitlar (test uchun ochiq)
+    |-- keys.env              # ishlaydigan API kalitlar (test qulayligi uchun)
+    |-- keys.env.example      # kalitlar namunasi
     |-- .gitignore
-    |-- design.md             # Dizayn hujjati
-    |-- readme.md
+    |-- DESIGN.md             # Dizayn hujjati
+    |-- README.md
 
 ## Arxitektura
 

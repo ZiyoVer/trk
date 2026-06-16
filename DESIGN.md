@@ -20,13 +20,16 @@ Topilgan endpointlar:
     /news       — 26 ta yangilik (to'liq HTML kontent bilan)
     /documents  — 100+ ta hujjat (PDF/DOCX fayl nomlari va sarlavhalari)
     /vacancies  — 29 ta vakansiya (to'liq tavsif bilan)
+    /statistics — 10 ta viloyat ko'rsatkichi (kafolat, kredit, kompensatsiya summalari)
 
-Yig'ish jarayoni (scraper.py):
+Yig'ish jarayoni (scrapper.py):
 - API'ga requests bilan so'rov yuboriladi
 - Referer va Origin headerlar majburiy (bo'lmasa server javob bermaydi)
 - SSL verify=False kerak (sertifikat zanjiri muammosi)
 - HTML taglar regex bilan tozalanadi
-- Natija trk_knowledge.json ga saqlanadi (164 ta yozuv)
+- /statistics 10 ta viloyat yozuvini beradi (umumiy qator yo'q), shuning uchun
+  barchasi qo'shilib milliy yig'indi sifatida bitta yozuvga aylantiriladi
+- Natija trk_knowledge.json ga saqlanadi (165 ta yozuv)
 
 Rad etilgan muqobillar:
 - Selenium/Playwright — API topilgandan keyin keraksiz. API to'g'ridan-to'g'ri JSON beradi, tezroq va ishonchliroq.
@@ -62,25 +65,35 @@ LLM: DeepSeek V4 Flash (deepseek-chat)
 Kelishuvlar (tradeoffs):
 - DeepSeek arzon va tez, lekin Claude yoki GPT-4 dan biroz sifati past. Support bot uchun bu yetarli.
 - all-MiniLM o'zbek tilini to'liq tushunmaydi, lekin bepul va tez. Production'da multilingual-e5-large ga o'tish mumkin.
-- Streaming yoqilgan — foydalanuvchi javobni tezroq ko'radi.
+- AsyncOpenAI (async client) bilan ishlanadi — javob streaming orqali yig'iladi, lekin
+  event loop bloklanmaydi. Telegram'da bir martalik toza xabar yuboriladi (bo'lak-bo'lak
+  edit qilish flood-limit va xatolik xavfini oshiradi).
 
 ## 5. Tizimning asosiy zaif tomonlari va xavflari
 
 5.1. Ma'lumot to'liqligi
-- /pages endpointlari faqat sarlavha qaytaradi, to'liq matn yo'q
+- /pages endpointlari faqat sarlavha qaytaradi, to'liq matn yo'q. Xizmat tavsiflari
+  React komponentlari ichida bo'lib, public API yoki HTML orqali olinmaydi (tekshirilgan:
+  trk.uz SSR'siz SPA, /services va o'xshash endpointlar 404 qaytaradi). Bu xizmatlarning
+  chuqur tafsilotlari bo'yicha botning eng katta cheklovi.
 - PDF/DOCX hujjatlar ichidagi matn indekslanmagan
-- Hal qilish: Selenium bilan sahifa kontentini olish yoki PDF parsing qo'shish
+- Hal qilish: Selenium/Playwright bilan render qilingan sahifa matnini olish yoki PDF parsing
 
-5.2. Barqarorlik
+5.2. Barqarorlik va parallellik
+- AsyncOpenAI + asyncio.to_thread ishlatiladi: LLM chaqiruvi va embedding qidiruvi event
+  loop'ni bloklamaydi, shuning uchun bir vaqtda bir nechta foydalanuvchi parallel xizmat oladi
+  (bitta sekin javob qolganlarni qotirib qo'ymaydi)
+- Timeout (30s) + har bir so'rov try/except ichida — sekin yoki ishlamaydigan API'da bot qulamaydi
 - ChromaDB xotirada (in-memory) ishlaydi — qayta ishga tushganda qayta yuklanadi
 - Chat history dict'da saqlanadi — ko'p foydalanuvchida xotira o'sadi
 - Hal qilish: ChromaDB persist rejimi, chat history'ni Redis yoki SQLite'ga ko'chirish
 
 5.3. Xavfsizlik
 - Prompt injection — qattiq system prompt va kalit so'z filtri bilan himoyalangan
-- Spam/flood — rate limiting (1 daqiqada 5 ta xabar)
+- Spam/flood — rate limiting (1 daqiqada 10 ta xabar)
 - Shaxsiy ma'lumot so'rovlari oldindan filterlanadi
 - Bo'sh/juda uzun xabarlar rad etiladi
+- API kalitlar keys.env'da (test qulayligi uchun repoda); production'da .gitignore + secrets manager
 
 5.4. Tashqi bog'liqlik
 - DeepSeek API ishlamay qolsa, bot javob bera olmaydi
